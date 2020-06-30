@@ -9,6 +9,11 @@
 #include <sys/time.h>
 
 typedef struct {
+  char host[256];
+  uint16_t port;
+  char username[256];
+  char password[256];
+  char database[256];
   char sql[256];
   char dataDir[256];
   int filesNum;
@@ -48,6 +53,11 @@ int main(int argc, char *argv[]) {
 }
 
 void parseArg(int argc, char *argv[]) {
+  strcpy(arguments.host, "127.0.0.1");
+  arguments.port = 6030;
+  strcpy(arguments.username, "root");
+  strcpy(arguments.password, "taosdata");
+  *arguments.database = 0;
   strcpy(arguments.sql, "./sqlCmd.txt");
   strcpy(arguments.dataDir, "./testdata");
   arguments.filesNum = 2;
@@ -55,7 +65,52 @@ void parseArg(int argc, char *argv[]) {
   arguments.rowsPerRequest = 100;
 
   for (int i = 1; i < argc; ++i) {
-    if (strcmp(argv[i], "-sql") == 0) {
+    if (strcmp(argv[i], "-host") == 0) {
+      if (i < argc - 1) {
+        strcpy(arguments.host, argv[++i]);
+      }
+      else {
+        fprintf(stderr, "'-host' requires a parameter, default:%s\n", arguments.host);
+        exit(EXIT_FAILURE);
+      }
+    }    
+    else if (strcmp(argv[i], "-port") == 0) {
+      if (i < argc - 1) {
+        arguments.port = (uint16_t)atoi(argv[++i]);
+      }
+      else {
+        fprintf(stderr, "'-port' requires a parameter, default:%s\n", arguments.port);
+        exit(EXIT_FAILURE);
+      }
+    } 
+    else if (strcmp(argv[i], "-username") == 0) {
+      if (i < argc - 1) {
+        strcpy(arguments.username, argv[++i]);
+      }
+      else {
+        fprintf(stderr, "'-username' requires a parameter, default:%s\n", arguments.username);
+        exit(EXIT_FAILURE);
+      }
+    } 
+    else if (strcmp(argv[i], "-password") == 0) {
+      if (i < argc - 1) {
+        strcpy(arguments.password, argv[++i]);
+      }
+      else {
+        fprintf(stderr, "'-password' requires a parameter, default:%s\n", arguments.password);
+        exit(EXIT_FAILURE);
+      }
+    } 
+    else if (strcmp(argv[i], "-database") == 0) {
+      if (i < argc - 1) {
+        strcpy(arguments.database, argv[++i]);
+      }
+      else {
+        fprintf(stderr, "'-database' requires a parameter, default:%s\n", arguments.database);
+        exit(EXIT_FAILURE);
+      }
+    }                  
+    else if (strcmp(argv[i], "-sql") == 0) {
       if (i < argc - 1) {
         strcpy(arguments.sql, argv[++i]);
       }
@@ -119,7 +174,7 @@ void writeDataImp(void *param) {
   ThreadObj *pThread = (ThreadObj *)param;
   printf("Thread %d, writing sID %d, eID %d\n", pThread->threadId, pThread->sID, pThread->eID);
 
-  void *taos = taos_connect("127.0.0.1", "root", "taosdata", NULL, 0);
+  void *taos = taos_connect(arguments.host, arguments.username, arguments.password, arguments.database, arguments.port);
   if (taos == NULL)
     taos_error(taos);
 
@@ -207,6 +262,11 @@ void writeDataImp(void *param) {
 
 void writeData() {
   printf("write data\n");
+  printf("---- host: %s\n", arguments.host);
+  printf("---- port: %d\n", arguments.port);
+  printf("---- username: %s\n", arguments.username);
+  printf("---- password: %s\n", arguments.password);
+  printf("---- database: %s\n", arguments.database); 
   printf("---- writeClients: %d\n", arguments.writeClients);
   printf("---- dataDir: %s\n", arguments.dataDir);
   printf("---- numOfFiles: %d\n", arguments.filesNum);
@@ -214,7 +274,7 @@ void writeData() {
 
   taos_init();
 
-  void *taos = taos_connect("127.0.0.1", "root", "taosdata", NULL, 0);
+  void *taos = taos_connect(arguments.host, arguments.username, arguments.password, arguments.database, arguments.port);
   if (taos == NULL)
     taos_error(taos);
 
@@ -265,9 +325,14 @@ void writeData() {
 
 void readData() {
   printf("read data\n");
+  printf("---- host: %s\n", arguments.host);
+  printf("---- port: %d\n", arguments.port);
+  printf("---- username: %s\n", arguments.username);
+  printf("---- password: %s\n", arguments.password);
+  printf("---- database: %s\n", arguments.database);  
   printf("---- sql: %s\n", arguments.sql);
 
-  void *taos = taos_connect("127.0.0.1", "root", "taosdata", NULL, 0);
+  void *taos = taos_connect(arguments.host, arguments.username, arguments.password, arguments.database, arguments.port);
   if (taos == NULL)
     taos_error(taos);
 
